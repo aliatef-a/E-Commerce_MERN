@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import userRoutes from "./routes/userRoutes";
 import productRoute from "./routes/productsRoutes";
+import cartRoute from "./routes/cartRoutes";
 import { seedInitialProducts } from "./services/productServices";
 
 const app = express();
@@ -20,6 +21,8 @@ mongoose
 
 app.use("/user", userRoutes);
 app.use("/products", productRoute);
+app.use("/cart", cartRoute);
+
 // set initial products
 seedInitialProducts();
 

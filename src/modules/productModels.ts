@@ -14,4 +14,4 @@ const ProductSchema = new Schema<IProduct>({
   stock: { type: Number, required: true, default: 0 },
 });
 
-export const productModel = mongoose.model<IProduct>("products", ProductSchema);
+export const productModel = mongoose.model<IProduct>("Products", ProductSchema);
