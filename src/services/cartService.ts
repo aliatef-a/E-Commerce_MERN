@@ -1,5 +1,6 @@
 import { cartModel } from "../modules/cartModels";
 import { productModel } from "../modules/productModels";
+import { calculateCartTotal } from "../utils/cart";
 
 interface CreateCartForUser {
   userId: string;
@@ -139,19 +140,12 @@ export const updateItemInCart = async ({
   }
 
   existInCart.quantity = quantity;
-
   const otherCartItems = cart.items.filter(
-    (p: any) => p.product.toString() !== productId,
+    (p: any) => p.product.toString() !== productId
   );
-
-  cart.totalAmount =
-    otherCartItems.reduce(
-      (total: number, item: any) => total + item.unitePrice * item.quantity,
-      0,
-    ) +
-    existInCart.unitePrice * quantity;
-
-  cart.items = [...otherCartItems, existInCart];
+  const updatedItems = [...otherCartItems, existInCart];
+  cart.items = updatedItems;
+  cart.totalAmount = calculateCartTotal(updatedItems);
 
   await cart.save();
 
@@ -162,3 +156,66 @@ export const updateItemInCart = async ({
     },
   };
 };
+
+interface DeleteItemeFromCart {
+  userId: string;
+  productId: string | string[] | undefined
+}
+
+
+export const deleteItemFormCart = async ({
+  userId,
+  productId,
+}: DeleteItemeFromCart) => {
+  const { data } = await getActiveCartForUser({ userId });
+  const cart = data.cart;
+
+  const existInCart = cart.items.find(
+    (p: any) => p.product.toString() === productId
+  );
+
+  if (!existInCart) {
+    return {
+      data: {
+        statusCode: 400,
+        message: "Product not found!",
+      },
+    };
+  }
+
+  // remove item
+  cart.items = cart.items.filter(
+    (p: any) => p.product.toString() !== productId
+  );
+
+  // recalc total
+  cart.totalAmount = calculateCartTotal(cart.items);
+
+  await cart.save();
+
+  return {
+    data: {
+      statusCode: 200,
+      cart,
+    },
+  };
+};
+
+interface ClearCart {
+  userId: string;
+
+}
+
+export const clearCart = async ({ userId }: ClearCart) => {
+  const { data } = await getActiveCartForUser({ userId });
+  const cart = data.cart;
+  cart.items = [];
+  cart.totalAmount = 0;
+  await cart.save();
+  return {
+    data: {
+      statusCode: 200,
+      cart,
+    },
+  };
+}
